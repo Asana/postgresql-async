@@ -16,10 +16,6 @@
 
 package com.github.mauricio.async.db.mysql.codec
 
-import java.net.InetSocketAddress
-import java.nio.ByteBuffer
-import java.util.concurrent.TimeUnit
-
 import com.github.mauricio.async.db.Configuration
 import com.github.mauricio.async.db.exceptions.DatabaseException
 import com.github.mauricio.async.db.general.MutableResultSet
@@ -28,13 +24,15 @@ import com.github.mauricio.async.db.mysql.message.client._
 import com.github.mauricio.async.db.mysql.message.server._
 import com.github.mauricio.async.db.mysql.util.CharsetMapper
 import com.github.mauricio.async.db.util.ChannelFutureTransformer.toFuture
-import com.github.mauricio.async.db.util._
 import io.netty.bootstrap.Bootstrap
 import io.netty.buffer.{ByteBuf, ByteBufAllocator, Unpooled}
 import io.netty.channel._
 import io.netty.channel.socket.nio.NioSocketChannel
 import io.netty.handler.codec.CodecException
 
+import java.net.InetSocketAddress
+import java.nio.ByteBuffer
+import java.util.concurrent.TimeUnit
 import scala.annotation.switch
 import scala.collection.mutable.{ArrayBuffer, HashMap}
 import scala.concurrent._
@@ -51,7 +49,6 @@ class MySQLConnectionHandler(
   extends SimpleChannelInboundHandler[Object] {
 
   private implicit val internalPool = executionContext
-  private final val log = Log.getByName(s"[connection-handler]${connectionId}")
   private final val bootstrap = new Bootstrap().group(this.group)
   private final val connectionPromise = Promise[MySQLConnectionHandler]
   private final val decoder = new MySQLFrameDecoder(configuration.charset, connectionId)
@@ -157,14 +154,12 @@ class MySQLConnectionHandler(
   }
 
   override def channelActive(ctx: ChannelHandlerContext): Unit = {
-    log.debug("Channel became active")
+    // TODO: Consider adding back debug logging for channel activity.
     handlerDelegate.connected(ctx)
   }
 
 
-  override def channelInactive(ctx: ChannelHandlerContext) {
-    log.debug("Channel became inactive")
-  }
+  override def channelInactive(ctx: ChannelHandlerContext): Unit = {}
 
   override def exceptionCaught(ctx: ChannelHandlerContext, cause: Throwable) {
     // unwrap CodecException if needed
