@@ -26,16 +26,18 @@ import com.github.mauricio.async.db.postgresql.column.{PostgreSQLColumnDecoderRe
 import com.github.mauricio.async.db.postgresql.exceptions._
 import com.github.mauricio.async.db.util._
 import com.github.mauricio.async.db.{Configuration, Connection}
-import java.util.concurrent.atomic.{AtomicInteger, AtomicLong, AtomicReference}
 
+import java.util.concurrent.atomic.{AtomicInteger, AtomicLong, AtomicReference}
 import messages.backend._
 import messages.frontend._
 
 import scala.concurrent._
 import io.netty.channel.EventLoopGroup
-import java.util.concurrent.CopyOnWriteArrayList
 
+import java.util.concurrent.CopyOnWriteArrayList
 import com.github.mauricio.async.db.postgresql.util.URLParser
+
+import scala.util.Failure
 
 object PostgreSQLConnection {
   final val Counter = new AtomicLong()
@@ -88,8 +90,9 @@ class PostgreSQLConnection
   def isReadyForQuery: Boolean = this.queryPromise.isEmpty
 
   def connect: Future[Connection] = {
-    this.connectionHandler.connect.onFailure {
-      case e => this.connectionFuture.tryFailure(e)
+    this.connectionHandler.connect.onComplete {
+      case Failure(e) => this.connectionFuture.tryFailure(e)
+      case _ => ()
     }
 
     this.connectionFuture.future

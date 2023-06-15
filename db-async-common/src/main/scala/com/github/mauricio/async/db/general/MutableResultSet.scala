@@ -17,15 +17,21 @@
 package com.github.mauricio.async.db.general
 
 import collection.mutable.ArrayBuffer
-import com.github.mauricio.async.db.{RowData, ResultSet}
+import com.github.mauricio.async.db.{ResultSet, RowData}
 import com.github.mauricio.async.db.util.Log
+
+import scala.collection.mutable
 
 object MutableResultSet {
   val log = Log.get[MutableResultSet[Nothing]]
 }
 
+// #ArrayBufferIndexedSeq
+// Note: The library seems to rely on passing mutable ArrayBuffers as immutable IndexedSeq.
+// I'm not confident that I can safely just swap for a builder function so I've swapped mutable.IndexedSeq
+// for (Immutable).IndexedSeq wherever relevant.
 class MutableResultSet[T <: ColumnData](
-                        val columnTypes: IndexedSeq[T]) extends ResultSet {
+                        val columnTypes: mutable.IndexedSeq[T]) extends ResultSet {
 
   private val rows = new ArrayBuffer[RowData]()
   private val columnMapping: Map[String, Int] = this.columnTypes.indices.map(
@@ -33,9 +39,9 @@ class MutableResultSet[T <: ColumnData](
       ( this.columnTypes(index).name, index ) ).toMap
 
 
-  val columnNames : IndexedSeq[String] = this.columnTypes.map(c => c.name)
+  val columnNames : mutable.IndexedSeq[String] = this.columnTypes.map(c => c.name)
 
-  val types : IndexedSeq[Int] = this.columnTypes.map(c => c.dataType)
+  val types : mutable.IndexedSeq[Int] = this.columnTypes.map(c => c.dataType)
 
   override def length: Int = this.rows.length
 

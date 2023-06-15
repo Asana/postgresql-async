@@ -18,9 +18,11 @@ package com.github.mauricio.async.db.mysql.message.client
 
 import com.github.mauricio.async.db.mysql.message.server.ColumnDefinitionMessage
 
+import scala.collection.mutable
+
 case class PreparedStatementExecuteMessage (
                                              statementId : Array[Byte],
                                              values : Seq[Any],
                                              valuesToInclude : Set[Int],
-                                             parameters : Seq[ColumnDefinitionMessage] )
+                                             parameters : mutable.Seq[ColumnDefinitionMessage] )
   extends ClientMessage( ClientMessage.PreparedStatementExecute )

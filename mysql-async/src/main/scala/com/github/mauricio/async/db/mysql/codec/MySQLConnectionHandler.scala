@@ -34,9 +34,11 @@ import java.net.InetSocketAddress
 import java.nio.ByteBuffer
 import java.util.concurrent.TimeUnit
 import scala.annotation.switch
+import scala.collection.mutable
 import scala.collection.mutable.{ArrayBuffer, HashMap}
 import scala.concurrent._
 import scala.concurrent.duration.Duration
+import scala.util.{Failure, Success}
 
 class MySQLConnectionHandler(
                               configuration: Configuration,
@@ -81,8 +83,9 @@ class MySQLConnectionHandler(
     this.bootstrap.option[java.lang.Boolean](ChannelOption.SO_KEEPALIVE, true)
     this.bootstrap.option[ByteBufAllocator](ChannelOption.ALLOCATOR, LittleEndianByteBufAllocator.INSTANCE)
 
-    this.bootstrap.connect(new InetSocketAddress(configuration.host, configuration.port)).onFailure {
-      case exception => this.connectionPromise.tryFailure(exception)
+    this.bootstrap.connect(new InetSocketAddress(configuration.host, configuration.port)).onComplete {
+      case Failure(exception) => this.connectionPromise.tryFailure(exception)
+      case _ => ()
     }
 
     this.connectionPromise.future
@@ -232,7 +235,8 @@ class MySQLConnectionHandler(
     }
   }
 
-  private def executePreparedStatement( statementId : Array[Byte], columnsCount : Int, values : Seq[Any], parameters : Seq[ColumnDefinitionMessage] ): Future[ChannelFuture] = {
+  // #ArrayBufferIndexedSeq
+  private def executePreparedStatement( statementId : Array[Byte], columnsCount : Int, values : Seq[Any], parameters : mutable.Seq[ColumnDefinitionMessage] ): Future[ChannelFuture] = {
     decoder.preparedStatementExecuteStarted(columnsCount, parameters.size)
     this.currentColumns.clear()
     this.currentParameters.clear()
@@ -319,8 +323,9 @@ class MySQLConnectionHandler(
     if ( this.currentContext.channel().isActive ) {
       val res = this.currentContext.writeAndFlush(message)
 
-      res.onFailure {
-        case e : Throwable => handleException(e)
+      res.onComplete {
+        case Failure(e) => handleException(e)
+        case _ => ()
       }
 
       res

@@ -16,6 +16,8 @@
 
 package com.github.mauricio.async.db
 
+import scala.collection.mutable
+
 /**
  *
  * Represents the collection of rows that is returned from a statement inside a {@link QueryResult}. It's basically
@@ -32,6 +34,6 @@ trait ResultSet extends IndexedSeq[RowData] {
    * @return
    */
 
-  def columnNames : IndexedSeq[String]
+  def columnNames : mutable.IndexedSeq[String]
 
 }

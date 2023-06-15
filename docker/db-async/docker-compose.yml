@@ -1,0 +1,26 @@
+services:
+  mysql:
+    image: mysql:5.7.41
+    # Force docker to fetch x64 since there's no arm/m1 image—we can emulate it though.
+    platform: linux/amd64
+    command: --sql_mode="ONLY_FULL_GROUP_BY,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION"
+    environment:
+      - MYSQL_ALLOW_EMPTY_PASSWORD=true
+      - MYSQL_USER=mysql_async
+      - MYSQL_PASSWORD=root
+      - NO_ZERO_DATE=false
+    volumes:
+      - ./:/etc/mysql/conf.d
+    ports:
+      # Forward 3307 to 3306 inside the container, so everything else works as default.
+      - "3307:3306"
+  postgres:
+    image: postgres:9.6
+    # Force docker to fetch x64 since there's no arm/m1 image—we can emulate it though.
+    platform: linux/amd64
+    environment:
+      - POSTGRES_HOST_AUTH_METHOD=trust
+    ports:
+      # Forward 5433 to 5432 inside the container, so everything else works as default.
+      # Why 5433? In-case someone else sets up postgres on sand.
+      - "5432:5432"

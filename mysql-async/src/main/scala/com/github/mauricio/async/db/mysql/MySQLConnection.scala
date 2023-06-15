@@ -81,8 +81,9 @@ class MySQLConnection(
   override def eventLoopGroup : EventLoopGroup = group
 
   def connect: Future[Connection] = {
-    this.connectionHandler.connect.onFailure {
-      case e => this.connectionPromise.tryFailure(e)
+    this.connectionHandler.connect.onComplete {
+      case Failure(e) => this.connectionPromise.tryFailure(e)
+      case _ => ()
     }
 
     this.connectionPromise.future

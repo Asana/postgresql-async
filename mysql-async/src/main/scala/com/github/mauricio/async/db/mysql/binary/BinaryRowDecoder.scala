@@ -20,6 +20,8 @@ import _root_.io.netty.buffer.ByteBuf
 import com.github.mauricio.async.db.exceptions.BufferNotFullyConsumedException
 import com.github.mauricio.async.db.mysql.message.server.ColumnDefinitionMessage
 import com.github.mauricio.async.db.util._
+
+import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 
 object BinaryRowDecoder {
@@ -29,9 +31,8 @@ object BinaryRowDecoder {
 
 class BinaryRowDecoder {
 
-  //import BinaryRowDecoder._
-
-  def decode(buffer: ByteBuf, columns: Seq[ColumnDefinitionMessage]): Array[Any] = {
+  // #ArrayBufferIndexedSeq
+  def decode(buffer: ByteBuf, columns: mutable.Seq[ColumnDefinitionMessage]): Array[Any] = {
 
     //log.debug("columns are {} - {}", buffer.readableBytes(), columns)
     //log.debug( "decoding row\n{}", MySQLHelper.dumpAsHex(buffer))

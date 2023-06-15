@@ -24,27 +24,22 @@ import com.github.mauricio.async.db.postgresql.messages.backend._
 import com.github.mauricio.async.db.postgresql.messages.frontend._
 import com.github.mauricio.async.db.util.ChannelFutureTransformer.toFuture
 import com.github.mauricio.async.db.util._
-import java.net.InetSocketAddress
-import scala.annotation.switch
-import scala.concurrent._
-import io.netty.channel._
 import io.netty.bootstrap.Bootstrap
 import io.netty.channel
-import scala.util.Failure
-import com.github.mauricio.async.db.postgresql.messages.backend.DataRowMessage
-import com.github.mauricio.async.db.postgresql.messages.backend.CommandCompleteMessage
-import com.github.mauricio.async.db.postgresql.messages.backend.ProcessData
-import scala.util.Success
-import com.github.mauricio.async.db.postgresql.messages.backend.RowDescriptionMessage
-import com.github.mauricio.async.db.postgresql.messages.backend.ParameterStatusMessage
+import io.netty.channel._
 import io.netty.channel.socket.nio.NioSocketChannel
 import io.netty.handler.codec.CodecException
-import io.netty.handler.ssl.{SslContextBuilder, SslHandler}
 import io.netty.handler.ssl.util.InsecureTrustManagerFactory
+import io.netty.handler.ssl.{SslContextBuilder, SslHandler}
 import io.netty.util.concurrent.FutureListener
-import javax.net.ssl.{SSLParameters, TrustManagerFactory}
-import java.security.KeyStore
+
 import java.io.FileInputStream
+import java.net.InetSocketAddress
+import java.security.KeyStore
+import javax.net.ssl.TrustManagerFactory
+import scala.annotation.switch
+import scala.concurrent._
+import scala.util.{Failure, Success}
 
 object PostgreSQLConnectionHandler {
   final val log = Log.get[PostgreSQLConnectionHandler]
@@ -96,8 +91,9 @@ class PostgreSQLConnectionHandler
     this.bootstrap.option[java.lang.Boolean](ChannelOption.SO_KEEPALIVE, true)
     this.bootstrap.option(ChannelOption.ALLOCATOR, configuration.allocator)
 
-    this.bootstrap.connect(new InetSocketAddress(configuration.host, configuration.port)).onFailure {
-      case e => connectionFuture.tryFailure(e)
+    this.bootstrap.connect(new InetSocketAddress(configuration.host, configuration.port)).onComplete {
+      case Failure(e) => connectionFuture.tryFailure(e)
+      case _ => ()
     }
 
     this.connectionFuture.future
@@ -265,8 +261,9 @@ class PostgreSQLConnectionHandler
   }
 
   def write( message : ClientMessage ) {
-    this.currentContext.writeAndFlush(message).onFailure {
-      case e : Throwable => connectionDelegate.onError(e)
+    this.currentContext.writeAndFlush(message).onComplete {
+      case Failure(e: Throwable) => connectionDelegate.onError(e)
+      case _ => ()
     }
   }
 

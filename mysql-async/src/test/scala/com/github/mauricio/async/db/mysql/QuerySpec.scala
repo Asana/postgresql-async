@@ -16,15 +16,16 @@
 
 package com.github.mauricio.async.db.mysql
 
-import com.github.mauricio.async.db.mysql.exceptions.MySQLException
-import org.joda.time._
-import org.specs2.mutable.Specification
-import scala.concurrent.duration.Duration
-import java.util.concurrent.TimeUnit
-import io.netty.util.CharsetUtil
+import com.github.mauricio.async.db.QueryResult
 import com.github.mauricio.async.db.exceptions.InsufficientParametersException
+import com.github.mauricio.async.db.mysql.exceptions.MySQLException
+import io.netty.util.CharsetUtil
+import org.joda.time._
 import org.specs2.matcher.MatchResult
-import com.github.mauricio.async.db.{QueryResult, ResultSet}
+import org.specs2.mutable.Specification
+
+import java.util.concurrent.TimeUnit
+import scala.concurrent.duration.Duration
 
 class QuerySpec extends Specification with ConnectionHelper {
 
@@ -158,12 +159,12 @@ class QuerySpec extends Specification with ConnectionHelper {
       val selectIdeas = "SELECT * FROM ideas"
 
       val matcher: QueryResult => List[MatchResult[IndexedSeq[String]]] = { result =>
-        val columns = result.rows.get.columnNames
+        val columns = result.rows.get.columnNames.toIndexedSeq
         List(columns must contain(allOf("id", "some_bytes")).inOrder, columns must have size (2))
       }
 
       val ideasMatcher: QueryResult => List[MatchResult[IndexedSeq[String]]] = { result =>
-        val columns = result.rows.get.columnNames
+        val columns = result.rows.get.columnNames.toIndexedSeq
         List(columns must contain(allOf("id", "some_idea")).inOrder, columns must have size (2))
       }
 
